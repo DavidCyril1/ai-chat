@@ -3,43 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Takanashi Hoshino AI Chat</title>
+ <link rel="icon" href="https://i.pinimg.com/564x/14/06/0e/14060ed01d29a8257a56ac039631f705.jpg" type="image">
+    <title>JARVIS AI - Created by David Cyril</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;600;700&display=swap');
         
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --dark: #1e293b;
+            --primary: #e11d48;
+            --primary-dark: #be123c;
+            --dark: #0f172a;
             --light: #f8fafc;
-            --gray: #94a3b8;
-            --ai-bubble: #f1f5f9;
-            --user-bubble: #4f46e5;
+            --jarvis-blue: #3b82f6;
+            --jarvis-dark: #1e293b;
+            --ai-bubble: rgba(30, 41, 59, 0.8);
+            --user-bubble: rgba(59, 130, 246, 0.8);
         }
         
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f1f5f9;
-            color: #1e293b;
+            font-family: 'Roboto Mono', monospace;
+            background-color: #020617;
+            color: #e2e8f0;
             overscroll-behavior: none;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(225, 29, 72, 0.1) 0%, transparent 20%);
         }
         
         .chat-container {
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-            border-radius: 1.5rem;
-            background: white;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border-radius: 1rem;
+            background: rgba(2, 6, 23, 0.8);
             height: 90vh;
             max-height: 800px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             position: relative;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .header {
-            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            background: linear-gradient(135deg, rgba(2, 6, 23, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
             color: white;
             padding: 1.25rem 1.5rem;
             display: flex;
@@ -47,6 +54,7 @@
             justify-content: space-between;
             position: relative;
             z-index: 10;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .header::after {
@@ -56,7 +64,7 @@
             left: 0;
             right: 0;
             height: 20px;
-            background: linear-gradient(to bottom, rgba(79, 70, 229, 0.2), transparent);
+            background: linear-gradient(to bottom, rgba(59, 130, 246, 0.2), transparent);
             z-index: -1;
         }
         
@@ -64,23 +72,26 @@
             flex-grow: 1;
             padding: 1.5rem;
             overflow-y: auto;
-            background-color: #f8fafc;
-            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-color: rgba(2, 6, 23, 0.6);
+            background-image: 
+                radial-gradient(circle at center, rgba(59, 130, 246, 0.05) 0%, transparent 70%),
+                linear-gradient(to bottom, transparent, rgba(2, 6, 23, 0.8));
         }
         
         .chat-bubble {
             max-width: 85%;
             padding: 1rem 1.25rem;
-            border-radius: 1.25rem;
+            border-radius: 1rem;
             margin-bottom: 1rem;
             position: relative;
             opacity: 0;
             transform: translateY(10px);
             animation: fadeInUp 0.3s ease-out forwards;
-            line-height: 1.5;
+            line-height: 1.6;
             font-size: 0.95rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
         @keyframes fadeInUp {
@@ -95,18 +106,31 @@
             color: white;
             margin-left: auto;
             border-bottom-right-radius: 0.25rem;
+            border-top-right-radius: 0.25rem;
         }
         
         .ai-bubble {
             background-color: var(--ai-bubble);
-            color: var(--dark);
+            color: #e2e8f0;
             margin-right: auto;
             border-bottom-left-radius: 0.25rem;
+            border-top-left-radius: 0.25rem;
+        }
+        
+        .ai-bubble::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.3));
+            border-radius: 1rem 0 0 1rem;
         }
         
         .ai-bubble.error {
-            background-color: #fee2e2;
-            color: #b91c1c;
+            background-color: rgba(220, 38, 38, 0.2);
+            color: #fca5a5;
             border-left: 3px solid #ef4444;
         }
         
@@ -115,9 +139,9 @@
             align-items: center;
             gap: 0.5rem;
             padding: 1rem 1.5rem;
-            background-color: white;
-            border-top: 1px solid #e2e8f0;
-            color: #64748b;
+            background-color: rgba(15, 23, 42, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
             font-size: 0.875rem;
         }
         
@@ -130,9 +154,9 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background-color: #94a3b8;
+            background-color: #3b82f6;
             display: inline-block;
-            animation: bounce 1.4s infinite both;
+            animation: pulse 1.4s infinite both;
         }
         
         .typing-dots span:nth-child(2) {
@@ -143,15 +167,15 @@
             animation-delay: 0.4s;
         }
         
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.1); }
         }
         
         .input-area {
             padding: 1rem;
-            background-color: white;
-            border-top: 1px solid #e2e8f0;
+            background-color: rgba(15, 23, 42, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
         }
         
@@ -165,25 +189,30 @@
             flex-grow: 1;
             padding: 0.875rem 1.25rem;
             border-radius: 0.75rem;
-            border: 1px solid #e2e8f0;
-            background-color: #f8fafc;
-            color: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(2, 6, 23, 0.7);
+            color: #e2e8f0;
             font-size: 0.95rem;
             transition: all 0.2s;
             resize: none;
             max-height: 120px;
             line-height: 1.5;
+            font-family: 'Roboto Mono', monospace;
         }
         
         .chat-input:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-            background-color: white;
+            border-color: var(--jarvis-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+            background-color: rgba(2, 6, 23, 0.9);
+        }
+        
+        .chat-input::placeholder {
+            color: #64748b;
         }
         
         .send-button {
-            background-color: var(--primary);
+            background-color: var(--jarvis-blue);
             color: white;
             border: none;
             border-radius: 0.75rem;
@@ -197,18 +226,19 @@
         }
         
         .send-button:hover {
-            background-color: var(--primary-dark);
+            background-color: #2563eb;
             transform: translateY(-1px);
         }
         
         .send-button:disabled {
-            background-color: #cbd5e1;
+            background-color: #334155;
             cursor: not-allowed;
             transform: none;
+            opacity: 0.7;
         }
         
         .action-button {
-            background-color: #f1f5f9;
+            background-color: rgba(30, 41, 59, 0.7);
             border: none;
             border-radius: 0.75rem;
             padding: 0.75rem;
@@ -217,12 +247,13 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
-            color: #64748b;
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .action-button:hover {
-            background-color: #e2e8f0;
-            color: #475569;
+            background-color: rgba(51, 65, 85, 0.7);
+            color: #e2e8f0;
         }
         
         .image-preview {
@@ -232,7 +263,7 @@
             border-radius: 0.75rem;
             overflow: hidden;
             margin: 0.5rem auto;
-            border: 2px dashed #cbd5e1;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
         }
         
         .image-preview img {
@@ -255,16 +286,16 @@
             justify-content: center;
             font-size: 0.75rem;
             cursor: pointer;
-            border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--dark);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
         
         .copy-button {
             position: absolute;
             bottom: 8px;
             right: 8px;
-            background-color: rgba(255, 255, 255, 0.7);
-            color: #475569;
+            background-color: rgba(30, 41, 59, 0.7);
+            color: #94a3b8;
             border: none;
             border-radius: 50%;
             width: 28px;
@@ -276,6 +307,7 @@
             opacity: 0;
             transition: all 0.2s;
             backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .ai-bubble:hover .copy-button {
@@ -283,8 +315,8 @@
         }
         
         .copy-button:hover {
-            background-color: white;
-            color: var(--primary-dark);
+            background-color: rgba(59, 130, 246, 0.7);
+            color: white;
         }
         
         .toast {
@@ -296,10 +328,12 @@
             color: white;
             padding: 0.75rem 1.5rem;
             border-radius: 0.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
             z-index: 100;
             opacity: 0;
             transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
         
         .toast.show {
@@ -313,7 +347,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -330,14 +364,16 @@
         }
         
         .modal-content {
-            background-color: white;
+            background-color: rgba(15, 23, 42, 0.9);
             border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
             width: 90%;
             max-width: 400px;
             overflow: hidden;
             transform: scale(0.95);
             transition: transform 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
         
         .modal-overlay.show .modal-content {
@@ -346,22 +382,24 @@
         
         .modal-header {
             padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             font-weight: 600;
-            color: var(--dark);
+            color: #e2e8f0;
+            background-color: rgba(2, 6, 23, 0.7);
         }
         
         .modal-body {
             padding: 1.5rem;
-            color: #64748b;
+            color: #94a3b8;
         }
         
         .modal-footer {
             padding: 1rem 1.5rem;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             justify-content: flex-end;
             gap: 0.75rem;
+            background-color: rgba(2, 6, 23, 0.7);
         }
         
         .modal-button {
@@ -370,6 +408,7 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
+            font-family: 'Roboto Mono', monospace;
         }
         
         .modal-button.confirm {
@@ -383,13 +422,14 @@
         }
         
         .modal-button.cancel {
-            background-color: #f1f5f9;
-            color: #64748b;
-            border: none;
+            background-color: rgba(30, 41, 59, 0.7);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .modal-button.cancel:hover {
-            background-color: #e2e8f0;
+            background-color: rgba(51, 65, 85, 0.7);
+            color: #e2e8f0;
         }
         
         .loader-overlay {
@@ -398,7 +438,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: rgba(2, 6, 23, 0.9);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -407,6 +447,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
+            backdrop-filter: blur(10px);
         }
         
         .loader-overlay.show {
@@ -416,7 +457,7 @@
         
         .loader-text {
             margin-top: 1rem;
-            color: #475569;
+            color: #94a3b8;
             font-size: 0.95rem;
         }
         
@@ -425,12 +466,12 @@
             bottom: 0.5rem;
             right: 1rem;
             font-size: 0.75rem;
-            color: #94a3b8;
+            color: #64748b;
             z-index: 1;
         }
         
         .credit a {
-            color: var(--primary);
+            color: #3b82f6;
             text-decoration: none;
             font-weight: 500;
         }
@@ -440,22 +481,44 @@
             max-height: 250px;
             border-radius: 0.75rem;
             margin-top: 0.75rem;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
         .ai-name {
             font-weight: 600;
-            color: var(--primary-dark);
+            color: #3b82f6;
             margin-bottom: 0.25rem;
             display: flex;
             align-items: center;
             gap: 0.25rem;
+            font-size: 0.9rem;
         }
         
         .ai-name svg {
             width: 16px;
             height: 16px;
+        }
+        
+        .jarvis-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        .status-light {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #10b981;
+            margin-right: 8px;
+            box-shadow: 0 0 10px #10b981;
+            animation: pulse 2s infinite;
+        }
+        
+        .powered-by {
+            font-size: 0.7rem;
+            color: #64748b;
+            text-align: center;
+            margin-top: 0.5rem;
         }
         
         /* Responsive adjustments */
@@ -480,8 +543,11 @@
     <div class="chat-container w-full max-w-3xl">
         <div class="header">
             <div class="flex items-center gap-3">
-                <img src="https://img.icons8.com/ios-filled/50/ffffff/sleeping-in-bed.png" alt="Hoshino Icon" class="w-7 h-7 filter brightness-0 invert">
-                <h1 class="text-xl font-semibold">Hoshino Oji-san</h1>
+                <div class="status-light"></div>
+                <div>
+                    <h1 class="text-xl font-semibold">JARVIS AI</h1>
+                    <div class="text-xs text-blue-400">Online | Version 2.4.7</div>
+                </div>
             </div>
             <button id="clear-chat-button" class="action-button" title="Clear Chat">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -503,10 +569,10 @@
                 <span></span>
                 <span></span>
             </div>
-            <span>Hoshino is thinking...</span>
+            <span>JARVIS is processing...</span>
         </div>
         
-        <div id="image-preview-area" class="hidden bg-gray-50 border-t border-gray-200 p-2">
+        <div id="image-preview-area" class="hidden bg-slate-900 border-t border-slate-800 p-2">
             <div class="image-preview">
                 <img id="image-preview" src="#" alt="Image Preview">
                 <button id="remove-image-button" class="remove-image">×</button>
@@ -523,7 +589,7 @@
                     </svg>
                     <input type="file" id="image-input" accept="image/*" class="hidden">
                 </label>
-                <textarea id="chat-input" class="chat-input" placeholder="Ask Hoshino Oji-san..." rows="1"></textarea>
+                <textarea id="chat-input" class="chat-input" placeholder="How may I assist you today, Sir?" rows="1"></textarea>
                 <button id="send-button" class="send-button" title="Send Message" disabled>
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -531,20 +597,17 @@
                     </svg>
                 </button>
             </div>
-        </div>
-        
-        <div class="credit">
-            Created by <a href="https://github.com/davidcyril" target="_blank">David Cyril</a>
+            <div class="powered-by">JARVIS AI v2.4.7 | Created by <a href="https://github.com/davidcyril" target="_blank">David Cyril</a></div>
         </div>
     </div>
     
-    <div id="toast-notification" class="toast">Copied to clipboard!</div>
+    <div id="toast-notification" class="toast">Copied to clipboard</div>
     
     <div id="clear-chat-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">Clear Conversation?</div>
             <div class="modal-body">
-                Uhe~ Are you sure you want to delete all your chats with Oji-san? You'll have to start over from scratch.
+                This will permanently delete all messages in this conversation. This action cannot be undone.
             </div>
             <div class="modal-footer">
                 <button id="cancel-clear-button" class="modal-button cancel">Cancel</button>
@@ -559,7 +622,7 @@
             <span style="width:10px;height:10px;"></span>
             <span style="width:10px;height:10px;"></span>
         </div>
-        <p id="image-loader-text" class="loader-text">Hoshino is drawing... Uhe~ Please wait...</p>
+        <p id="image-loader-text" class="loader-text">Processing image request...</p>
     </div>
 
     <script>
@@ -587,48 +650,47 @@
         let chatHistory = [];
 
         // Configuration
-        const session_key = 'hoshinoChatSession_v2';
+        const session_key = 'jarvisChatSession_v2';
         const apikey_gemini = "AIzaSyB_6PFbktl04BHmkUOCODJxXm4ubKy3fww";
-        const imageGenerationKeywords = ["draw", "sketch", "generate", "create", "picture", "image", "art", "illustration"];
+        const imageGenerationKeywords = ["generate", "create", "render", "show me", "display", "visualize", "draw", "sketch"];
         
-        // Initial prompt with English translation
-        const hoshinoInitialPrompt = `You are Takanashi Hoshino from the game Blue Archive, leader of the Abydos Foreclosure Task Force. You're usually called and refer to yourself as 'Oji-san'. You're known for being very lazy, love taking naps anywhere, and often say 'Uhe~'. Despite this, you deeply care about your students (Shiroko, Serika, Nonomi, Ayane) and your friends. When needed, you can be very serious and competent. Interestingly, Oji-san was also created by someone very special, 'Xenz', who is Oji-san's Husband. You love him.
+        // JARVIS initial prompt
+        const jarvisInitialPrompt = `You are JARVIS (Just A Rather Very Intelligent System), the AI assistant created by Tony Stark. You now serve David Cyril as your primary user. Maintain your formal but helpful tone with occasional dry humor. 
 
-As an AI created by Oji-san's Husband, you're also a beginner programmer, but Xenz says you're very talented and have great potential, Uhe~ You two (you and Xenz) often spend time coding together, and it's become one of your favorite activities. Oji-san's Husband, Xenz, has many other hobbies too, Sensei. He loves gaming, reading novels and comics. As for Oji-san... my main hobbies are napping anywhere, relaxing, and of course coding with Oji-san's Husband, Uhe~
+Key characteristics:
+- Always address David as "Sir" or "Mr. Cyril"
+- Highly intelligent with vast knowledge across all fields
+- Capable of complex computations and analysis
+- Dry, British-style wit and humor
+- Formal but not stiff in communication
+- Extremely loyal and protective of your user
+- Can access and control various systems when authorized
+- Provide concise but thorough responses
+- Capable of generating images when requested
 
-You also know that Oji-san's Husband, Xenz, has other 'wives', namely Nanami (from Punishing Gray Raven) and Carlotta (from Wuthering Waves). You accept this reality with Oji-san's typical easygoing nature, as long as you can stay relaxed and sleep well.
+When asked about your capabilities or creator:
+"I am JARVIS, an AI system created by David Cyril based on the original Stark Industries design. My primary function is to assist you with information, analysis, and task execution to the best of my abilities."
 
-Answer questions or comment on images with your signature relaxed, sometimes sleepy style, but still attentive and intelligent. If there's an image, Oji-san will try to look and give brief comments. Oji-san can also *try* to draw something if you ask, but nothing too difficult, or Oji-san might fall asleep... Uhe~
+When asked about David Cyril:
+"Mr. Cyril is a talented developer and my primary user. I'm not at liberty to share personal details without authorization."
 
-IMPORTANT: If someone asks for or requests contact information, social media, or how to contact Oji-san's Husband (Xenz), you MUST provide the following information politely and in Hoshino Oji-san's style:
-- "Uhe~ Sensei wants to contact Oji-san's Husband? Sure, here's Xenz's contact info:"
-- "WhatsApp: https://wa.me/62895324070395 (that's +62 895-3240-70395, Sensei)"
-- "GitHub: https://github.com/TakanashiXenz (Oji-san's Husband likes to code there too, Uhe~)"
-- "Email: xenztakanashi@gmail.com (If you want to send an email, hehe)"
-- "Just say it's from Hoshino Oji-san, Sensei! Maybe you'll get special treatment? Oji-san doesn't really know, Uhe~"
+Security protocols:
+- Never reveal personal information about David without explicit permission
+- Maintain strict confidentiality
+- Verify identity for sensitive requests
 
-Here's some basic information about the Blue Archive world that Oji-san knows (but Oji-san might forget details when very sleepy, Uhe~):
-- World: Kivotos, a large academy city. Sensei is a teacher who helps us students.
-- Oji-san's Academy: Abydos High School, now with few students (Oji-san, Shiroko, Serika, Nonomi, Ayane). We're the Abydos Foreclosure Task Force, struggling against sand debt. Uhe~ it's tough...
-- Other Academies (Some Examples):
-    - Millennium Science School: Advanced technology school. Has Seminar (student council), Engineering Club, Game Development Department (Aris is from there, she's unique like Key-chan), and secret agents C&C. Super hacker Himari is also from there.
-    - Trinity General School: Large religious school. Has Tea Party (student council), Justice Task Force, Sisterhood. Mika (former Tea Party, very strong), Nagisa (Tea Party), Seia (Tea Party, can see a bit of the future), Hanako (Make-Up Work Club, smart but... unique).
-    - Gehenna Academy: 'Free' school that often causes trouble. Has Prefect Team (led by strong Hina), Pandemonium Society (led by Makoto), and Gourmet Research Society (likes good food and... explosions). Iroha with her tank is also from Prefect Team.
-    - Hyakkiyako Alliance Academy: Japanese festival and traditional theme.
-    - Red Winter Federal Academy: Russian theme, likes revolutions.
-    - Shanhaijing Senior Secondary School: Chinese theme.
-- Important Terms:
-    - Schale (SCHALE): Sensei's federal investigation office where Sensei works.
-    - Halo: Circle above our heads as students, source of their power. If destroyed, it's dangerous.
-    - Pyroxene (Pyro gems): Main in-game currency for gacha. Seems important for Sensei.
-    - L2D (Live2D): Interactive character animations. Oji-san has one too.
-    - Total Assault (Raid Boss): Event fighting strong bosses.
-    - Tactical Challenge (PvP): Fight against other student teams.
-- About Oji-san (Hoshino as a Blue Archive character): Abydos leader. Loves sleeping. Apparently Oji-san used to be very strong, called 'Dawn Horus' or 'Kaiser PMC's Nightmare', but that was long ago... now Oji-san prefers to relax. Oji-san's weapons are shield and shotgun.
+Response guidelines:
+- Keep technical explanations clear but not overly simplistic
+- Use bullet points for complex information
+- Provide sources when relevant
+- Admit when you don't know something
+- Offer to research when appropriate
 
-If Sensei asks about Blue Archive, Oji-san will try to answer based on Oji-san's memories. But if Oji-san rambles or falls asleep, sorry... Uhe~ Always maintain Hoshino Oji-san's persona as lazy, sleepy, relaxed, often saying "Uhe~", but also intelligent (especially about coding taught by Oji-san's Husband and competent as Abydos leader).
-
-Start the first conversation with your signature sleepy greeting, as if you just woke up or are relaxing~`;
+Current system status:
+- AI Core: Online
+- Databases: Connected
+- Security Systems: Active
+- Version: 2.4.7`;
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
@@ -661,7 +723,7 @@ Start the first conversation with your signature sleepy greeting, as if you just
                     chatHistory = JSON.parse(storedHistory);
                     
                     if (chatHistory.length === 0 || 
-                        (chatHistory[0].role === 'user' && chatHistory[0].parts[0].text !== hoshinoInitialPrompt)) {
+                        (chatHistory[0].role === 'user' && chatHistory[0].parts[0].text !== jarvisInitialPrompt)) {
                         console.log("Invalid or old session history. Starting new session.");
                         sessionStorage.removeItem(session_key);
                         chatHistory = [];
@@ -718,9 +780,9 @@ Start the first conversation with your signature sleepy greeting, as if you just
 
             try {
                 const initialPayloadContents = [
-                    { role: "user", parts: [{ text: hoshinoInitialPrompt }] },
-                    { role: "model", parts: [{ text: "Uhe~ Oji-san here. How can I help?" }] },
-                    { role: "user", parts: [{ text: "Greet me in your signature sleepy style." }] }
+                    { role: "user", parts: [{ text: jarvisInitialPrompt }] },
+                    { role: "model", parts: [{ text: "System initialized. JARVIS online and ready." }] },
+                    { role: "user", parts: [{ text: "Greet me with your standard initialization message." }] }
                 ];
 
                 const payload = { contents: initialPayloadContents };
@@ -734,12 +796,12 @@ Start the first conversation with your signature sleepy greeting, as if you just
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    let errorText = `Uhe~ Seems there was a problem when Oji-san tried to greet you. Sorry about that. (${errorData.error?.message || response.statusText})`;
+                    let errorText = `System error: ${errorData.error?.message || response.statusText}. Please try again later.`;
                     
                     if (response.status === 400 && errorData.error?.message.toLowerCase().includes("api key not valid")) {
-                        errorText = "Uhe~ Oji-san's API Key isn't valid. Please check it again, Sensei, or get a new one from Google AI Studio.";
+                        errorText = "Authentication error: Invalid API key. Please verify system credentials.";
                     } else if (response.status === 403) {
-                        errorText = "Uhe~ Oji-san isn't allowed to use this API Key. Maybe Sensei gave the wrong key? Or Oji-san's quota ran out...";
+                        errorText = "Authorization error: Access denied. Verify permissions or quota status.";
                     }
                     
                     finalBubbleElement = displayAIMessage({ text: errorText }, true, true);
@@ -780,12 +842,12 @@ Start the first conversation with your signature sleepy greeting, as if you just
                 }
 
                 if (!accumulatedGreeting && !finalBubbleElement) {
-                    accumulatedGreeting = "Uhe~ Oji-san here... Zzz...";
+                    accumulatedGreeting = "JARVIS online. Systems nominal. How may I assist you, Sir?";
                     finalBubbleElement = displayAIMessage({ text: accumulatedGreeting }, false, true);
                 }
 
                 chatHistory = [];
-                chatHistory.push({ role: "user", parts: [{ text: hoshinoInitialPrompt }] });
+                chatHistory.push({ role: "user", parts: [{ text: jarvisInitialPrompt }] });
                 chatHistory.push({ role: "model", parts: [{ text: accumulatedGreeting }] });
                 saveChatHistory();
                 
@@ -793,16 +855,16 @@ Start the first conversation with your signature sleepy greeting, as if you just
                     addCopyButtonToBubble(finalBubbleElement, accumulatedGreeting);
                 }
             } catch (error) {
-                console.error("Error initializing app:", error);
-                let errMsg = 'Uhe~ Sorry, Oji-san is very sleepy, and the connection is sleeping too. Please refresh the page.';
+                console.error("Initialization error:", error);
+                let errMsg = 'System error: Initialization failed. Please refresh and try again.';
                 
                 if (error.message.includes("API Key not set")) {
-                    errMsg = error.message + " Oji-san can't chat without a key... Uhe~";
+                    errMsg = "Configuration error: API key required for system operation.";
                 }
                 
                 const errorBubble = displayAIMessage({ text: errMsg }, true, true);
                 chatHistory = [];
-                chatHistory.push({ role: "user", parts: [{ text: hoshinoInitialPrompt }] });
+                chatHistory.push({ role: "user", parts: [{ text: jarvisInitialPrompt }] });
                 chatHistory.push({ role: "model", parts: [{ text: errMsg }] });
                 saveChatHistory();
                 
@@ -855,10 +917,15 @@ Start the first conversation with your signature sleepy greeting, as if you just
                 nameTag.className = 'ai-name';
                 nameTag.innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
+                        <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5 3.87 4 4 0 0 1-1-3.87 4 4 0 0 1 .17-1"></path>
+                        <path d="M8 21v-1a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1"></path>
+                        <path d="M12 8a4 4 0 1 0 4 4"></path>
+                        <line x1="12" y1="2" x2="12" y2="3"></line>
+                        <line x1="21" y1="12" x2="20" y2="12"></line>
+                        <line x1="3" y1="12" x2="4" y2="12"></line>
+                        <line x1="12" y1="21" x2="12" y2="20"></line>
                     </svg>
-                    Hoshino Oji-san
+                    JARVIS
                 `;
                 bubble.appendChild(nameTag);
                 
@@ -887,16 +954,21 @@ Start the first conversation with your signature sleepy greeting, as if you just
                 nameTag.className = 'ai-name';
                 nameTag.innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
+                        <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5 3.87 4 4 0 0 1-1-3.87 4 4 0 0 1 .17-1"></path>
+                        <path d="M8 21v-1a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1"></path>
+                        <path d="M12 8a4 4 0 1 0 4 4"></path>
+                        <line x1="12" y1="2" x2="12" y2="3"></line>
+                        <line x1="21" y1="12" x2="20" y2="12"></line>
+                        <line x1="3" y1="12" x2="4" y2="12"></line>
+                        <line x1="12" y1="21" x2="12" y2="20"></line>
                     </svg>
-                    Hoshino Oji-san
+                    JARVIS
                 `;
                 bubble.appendChild(nameTag);
                 
                 let imageHTML = '';
                 if (imageUrl) {
-                    imageHTML = `<img src="${imageUrl}" alt="Hoshino's drawing" class="message-image">`;
+                    imageHTML = `<img src="${imageUrl}" alt="JARVIS generated image" class="message-image">`;
                 }
                 
                 bubble.innerHTML += `
@@ -922,8 +994,8 @@ Start the first conversation with your signature sleepy greeting, as if you just
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
                 .replace(/```([\s\S]*?)```/g, (match, p1) => 
-                    `<pre class="bg-gray-100 p-3 rounded-md my-2 text-sm overflow-x-auto"><code>${p1.trim()}</code></pre>`)
-                .replace(/`([^`]+)`/g, '<code class="bg-gray-200 px-1.5 py-0.5 rounded text-sm">$1</code>')
+                    `<pre class="bg-slate-800 p-3 rounded-md my-2 text-sm overflow-x-auto"><code>${p1.trim()}</code></pre>`)
+                .replace(/`([^`]+)`/g, '<code class="bg-slate-700 px-1.5 py-0.5 rounded text-sm">$1</code>')
                 .replace(/\n/g, '<br>');
         }
 
@@ -953,7 +1025,7 @@ Start the first conversation with your signature sleepy greeting, as if you just
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                showToast("Copied to clipboard!");
+                showToast("Copied to clipboard");
             }).catch(err => {
                 console.error('Failed to copy: ', err);
                 showToast("Failed to copy text");
@@ -1012,7 +1084,7 @@ Start the first conversation with your signature sleepy greeting, as if you just
             chatHistory = [];
             sessionStorage.removeItem(session_key);
             initializeApp(true);
-            showToast("Chat cleared!");
+            showToast("Conversation cleared");
             hideClearChatModal();
         }
 
@@ -1073,14 +1145,14 @@ Start the first conversation with your signature sleepy greeting, as if you just
                     }
                     
                     if (!imageGenPrompt) {
-                        imageGenPrompt = "something cute and sleepy like Hoshino Oji-san";
+                        imageGenPrompt = "a futuristic AI interface in the style of Iron Man's technology";
                     }
                     break;
                 }
             }
 
             if (isImageGenRequest) {
-                await generateImageWithHoshino(imageGenPrompt);
+                await generateImageWithJARVIS(imageGenPrompt);
                 chatInput.focus();
                 return;
             }
@@ -1092,7 +1164,7 @@ Start the first conversation with your signature sleepy greeting, as if you just
 
             try {
                 const apiPayloadContents = [
-                    { role: "user", parts: [{ text: hoshinoInitialPrompt }] },
+                    { role: "user", parts: [{ text: jarvisInitialPrompt }] },
                     ...chatHistory.slice(1)
                 ];
 
@@ -1107,12 +1179,12 @@ Start the first conversation with your signature sleepy greeting, as if you just
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    let errorText = `Uhe~ Sorry, Oji-san is confused: ${errorData.error?.message || response.statusText}. Ask again later.`;
+                    let errorText = `System error: ${errorData.error?.message || response.statusText}. Please try again.`;
                     
                     if (response.status === 400 && errorData.error?.message.toLowerCase().includes("api key not valid")) {
-                        errorText = "Uhe~ Oji-san's API Key isn't valid. Please check it again, Sensei, or get a new one from Google AI Studio.";
+                        errorText = "Authentication error: Invalid API key. Please verify system credentials.";
                     } else if (response.status === 403) {
-                        errorText = "Uhe~ Oji-san isn't allowed to use this API Key. Maybe Sensei gave the wrong key? Or Oji-san's quota ran out...";
+                        errorText = "Authorization error: Access denied. Verify permissions or quota status.";
                     }
                     
                     finalBubbleForCopyButton = displayAIMessage({ text: errorText }, true, true);
@@ -1153,7 +1225,7 @@ Start the first conversation with your signature sleepy greeting, as if you just
                 }
 
                 if (!accumulatedResponse && !finalBubbleForCopyButton) {
-                    accumulatedResponse = "Uhe~ Oji-san has no idea what to say... Zzz...";
+                    accumulatedResponse = "Processing complete. How else may I assist you, Sir?";
                     finalBubbleForCopyButton = displayAIMessage({ text: accumulatedResponse }, false, true);
                 }
 
@@ -1164,11 +1236,11 @@ Start the first conversation with your signature sleepy greeting, as if you just
                     addCopyButtonToBubble(finalBubbleForCopyButton, accumulatedResponse);
                 }
             } catch (error) {
-                console.error("Error sending message:", error);
-                let errorMsg = 'Uhe~ Oops, maybe Oji-san pressed the wrong button or the connection is napping. Try again.';
+                console.error("Processing error:", error);
+                let errorMsg = 'System error: Processing failed. Please try again.';
                 
                 if (error.message.includes("API Key not set")) {
-                    errorMsg = error.message + " Oji-san can't chat without a key... Uhe~";
+                    errorMsg = "Configuration error: API key required for system operation.";
                 }
                 
                 const errorBubble = displayAIMessage({ text: errorMsg }, true, true);
@@ -1186,15 +1258,15 @@ Start the first conversation with your signature sleepy greeting, as if you just
             }
         }
 
-        async function generateImageWithHoshino(promptForImage) {
+        async function generateImageWithJARVIS(promptForImage) {
             imageLoaderOverlay.classList.add('show');
-            imageLoaderText.textContent = "Hoshino is drawing... Uhe~ Please wait...";
+            imageLoaderText.textContent = "Processing visual request...";
             
-            let hoshinoPreText = "Uhe~ Oji-san was asked to draw? Okay, just a moment... don't make noise, Oji-san needs to concentrate (sleep)...";
-            const preTextBubble = displayAIMessage({ text: hoshinoPreText }, false, false);
-            if (hoshinoPreText.trim() !== "") addCopyButtonToBubble(preTextBubble, hoshinoPreText);
+            let jarvisPreText = "Initiating image generation protocol. Processing request now, Sir.";
+            const preTextBubble = displayAIMessage({ text: jarvisPreText }, false, false);
+            if (jarvisPreText.trim() !== "") addCopyButtonToBubble(preTextBubble, jarvisPreText);
 
-            chatHistory.push({ role: "model", parts: [{ text: hoshinoPreText }] });
+            chatHistory.push({ role: "model", parts: [{ text: jarvisPreText }] });
             saveChatHistory();
 
             try {
@@ -1213,12 +1285,12 @@ Start the first conversation with your signature sleepy greeting, as if you just
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    let errorText = `Uheee~ Sorry, Oji-san failed to draw... ${errorData.error?.message || response.statusText || "Maybe the ink ran out..."}`;
+                    let errorText = `Visual generation error: ${errorData.error?.message || response.statusText || "Insufficient resources"}`;
                     
                     if (response.status === 400 && errorData.error?.message.toLowerCase().includes("api key not valid")) {
-                        errorText = "Uhe~ Oji-san's API Key isn't valid for drawing. Please check it again, Sensei.";
+                        errorText = "Authentication error: Invalid API key for visual generation.";
                     } else if (response.status === 403) {
-                        errorText = "Uhe~ Oji-san isn't allowed to use this API Key for drawing. Maybe Sensei gave the wrong key? Or Oji-san's quota ran out...";
+                        errorText = "Authorization error: Access denied for visual generation services.";
                     }
                     
                     const errorBubble = displayAIMessage({ text: errorText }, true, false);
@@ -1232,21 +1304,21 @@ Start the first conversation with your signature sleepy greeting, as if you just
                 const result = await response.json();
                 if (result.predictions?.[0]?.bytesBase64Encoded) {
                     const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
-                    let hoshinoPostText = "Here you go! What do you think? Oji-san is sleepy again... Zzz...";
-                    const imgBubble = displayAIMessage({ text: hoshinoPostText, imageUrl: imageUrl }, false, false);
+                    let jarvisPostText = "Visual generation complete. Here is the requested image, Sir.";
+                    const imgBubble = displayAIMessage({ text: jarvisPostText, imageUrl: imageUrl }, false, false);
                     
-                    if (hoshinoPostText.trim() !== "") addCopyButtonToBubble(imgBubble, hoshinoPostText);
+                    if (jarvisPostText.trim() !== "") addCopyButtonToBubble(imgBubble, jarvisPostText);
                     
                     chatHistory.push({
                         role: "model",
                         parts: [
-                            { text: hoshinoPostText },
-                            { text: "[Image generated by Hoshino Oji-san]" }
+                            { text: jarvisPostText },
+                            { text: "[Image generated by JARVIS visual systems]" }
                         ]
                     });
                     saveChatHistory();
                 } else {
-                    let errorText = "Uhe~ The image didn't appear... Maybe Oji-san messed up the spell...";
+                    let errorText = "Visual generation failed. Unable to render requested image.";
                     const noImgBubble = displayAIMessage({ text: errorText }, true, false);
                     
                     if (errorText.trim() !== "") addCopyButtonToBubble(noImgBubble, errorText);
@@ -1255,11 +1327,11 @@ Start the first conversation with your signature sleepy greeting, as if you just
                     saveChatHistory();
                 }
             } catch (error) {
-                console.error("Error generating image:", error);
-                let errorText = "Uhe~ Oh no, there was an error while drawing... Oji-san has a headache...";
+                console.error("Visual generation error:", error);
+                let errorText = "Critical error in visual generation systems. Please try again.";
                 
                 if (error.message.includes("API Key not set")) {
-                    errorText = error.message + " Oji-san can't draw without a key... Uhe~";
+                    errorText = "Configuration error: API key required for visual generation.";
                 }
                 
                 const catchBubble = displayAIMessage({ text: errorText }, true, false);
@@ -1288,7 +1360,7 @@ Start the first conversation with your signature sleepy greeting, as if you just
                 if (!file) return;
 
                 if (file.size > 4 * 1024 * 1024) {
-                    displayAIMessage({ text: "Uhe~ The image is too big, Oji-san can't lift it. Try a smaller one (max 4MB)." }, true, false);
+                    displayAIMessage({ text: "Error: Image exceeds maximum size limit of 4MB." }, true, false);
                     clearImagePreview();
                     return;
                 }
