@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Takanashi Hoshino AI Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #94a3b8;
+            --ai-bubble: #f1f5f9;
+            --user-bubble: #4f46e5;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+            overscroll-behavior: none;
+        }
+        
+        .chat-container {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            border-radius: 1.5rem;
+            background: white;
+            height: 90vh;
+            max-height: 800px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(to bottom, rgba(79, 70, 229, 0.2), transparent);
+            z-index: -1;
+        }
+        
+        .chat-area {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .chat-bubble {
+            max-width: 85%;
+            padding: 1rem 1.25rem;
+            border-radius: 1.25rem;
+            margin-bottom: 1rem;
+            position: relative;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.3s ease-out forwards;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .user-bubble {
+            background-color: var(--user-bubble);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 0.25rem;
+        }
+        
+        .ai-bubble {
+            background-color: var(--ai-bubble);
+            color: var(--dark);
+            margin-right: auto;
+            border-bottom-left-radius: 0.25rem;
+        }
+        
+        .ai-bubble.error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border-left: 3px solid #ef4444;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 1.5rem;
+            background-color: white;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 0.25rem;
+        }
+        
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #94a3b8;
+            display: inline-block;
+            animation: bounce 1.4s infinite both;
+        }
+        
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        
+        .input-area {
+            padding: 1rem;
+            background-color: white;
+            border-top: 1px solid #e2e8f0;
+            position: relative;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        
+        .chat-input {
+            flex-grow: 1;
+            padding: 0.875rem 1.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            color: #1e293b;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            resize: none;
+            max-height: 120px;
+            line-height: 1.5;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            background-color: white;
+        }
+        
+        .send-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .send-button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        .send-button:disabled {
+            background-color: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .action-button {
+            background-color: #f1f5f9;
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #64748b;
+        }
+        
+        .action-button:hover {
+            background-color: #e2e8f0;
+            color: #475569;
+        }
+        
+        .image-preview {
+            position: relative;
+            max-width: 120px;
+            max-height: 90px;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin: 0.5rem auto;
+            border: 2px dashed #cbd5e1;
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .copy-button {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background-color: rgba(255, 255, 255, 0.7);
+            color: #475569;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+        }
+        
+        .ai-bubble:hover .copy-button {
+            opacity: 1;
+        }
+        
+        .copy-button:hover {
+            background-color: white;
+            color: var(--primary-dark);
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--dark);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-10px);
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+        
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+            color: #64748b;
+        }
+        
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+        
+        .modal-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .modal-button.confirm {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+        }
+        
+        .modal-button.confirm:hover {
+            background-color: #dc2626;
+        }
+        
+        .modal-button.cancel {
+            background-color: #f1f5f9;
+            color: #64748b;
+            border: none;
+        }
+        
+        .modal-button.cancel:hover {
+            background-color: #e2e8f0;
+        }
+        
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loader-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .loader-text {
+            margin-top: 1rem;
+            color: #475569;
+            font-size: 0.95rem;
+        }
+        
+        .credit {
+            position: absolute;
+            bottom: 0.5rem;
+            right: 1rem;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            z-index: 1;
+        }
+        
+        .credit a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .message-image {
+            max-width: 250px;
+            max-height: 250px;
+            border-radius: 0.75rem;
+            margin-top: 0.75rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .ai-name {
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .ai-name svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .chat-container {
+                height: 100vh;
+                max-height: none;
+                border-radius: 0;
+            }
+            
+            .chat-bubble {
+                max-width: 90%;
+            }
+            
+            .message-image {
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="chat-container w-full max-w-3xl">
+        <div class="header">
+            <div class="flex items-center gap-3">
+                <img src="https://img.icons8.com/ios-filled/50/ffffff/sleeping-in-bed.png" alt="Hoshino Icon" class="w-7 h-7 filter brightness-0 invert">
+                <h1 class="text-xl font-semibold">Hoshino Oji-san</h1>
+            </div>
+            <button id="clear-chat-button" class="action-button" title="Clear Chat">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+            </button>
+        </div>
+        
+        <div id="chat-output" class="chat-area">
+            <!-- Chat messages will appear here -->
+        </div>
+        
+        <div id="typing-indicator" class="typing-indicator hidden">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <span>Hoshino is thinking...</span>
+        </div>
+        
+        <div id="image-preview-area" class="hidden bg-gray-50 border-t border-gray-200 p-2">
+            <div class="image-preview">
+                <img id="image-preview" src="#" alt="Image Preview">
+                <button id="remove-image-button" class="remove-image">×</button>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <div class="input-container">
+                <label for="image-input" class="action-button" title="Upload Image">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    <input type="file" id="image-input" accept="image/*" class="hidden">
+                </label>
+                <textarea id="chat-input" class="chat-input" placeholder="Ask Hoshino Oji-san..." rows="1"></textarea>
+                <button id="send-button" class="send-button" title="Send Message" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="credit">
+            Created by <a href="https://github.com/davidcyril" target="_blank">David Cyril</a>
+        </div>
+    </div>
+    
+    <div id="toast-notification" class="toast">Copied to clipboard!</div>
+    
+    <div id="clear-chat-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">Clear Conversation?</div>
+            <div class="modal-body">
+                Uhe~ Are you sure you want to delete all your chats with Oji-san? You'll have to start over from scratch.
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-clear-button" class="modal-button cancel">Cancel</button>
+                <button id="confirm-clear-button" class="modal-button confirm">Clear</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="image-loader-overlay" class="loader-overlay">
+        <div class="typing-dots">
+            <span style="width:10px;height:10px;"></span>
+            <span style="width:10px;height:10px;"></span>
+            <span style="width:10px;height:10px;"></span>
+        </div>
+        <p id="image-loader-text" class="loader-text">Hoshino is drawing... Uhe~ Please wait...</p>
+    </div>
+
+    <script>
+        // DOM Elements
+        const chatOutput = document.getElementById('chat-output');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-button');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const imageInput = document.getElementById('image-input');
+        const imagePreviewArea = document.getElementById('image-preview-area');
+        const imagePreview = document.getElementById('image-preview');
+        const removeImageButton = document.getElementById('remove-image-button');
+        const clearChatButton = document.getElementById('clear-chat-button');
+        const toastNotification = document.getElementById('toast-notification');
+        const clearChatModal = document.getElementById('clear-chat-modal');
+        const confirmClearButton = document.getElementById('confirm-clear-button');
+        const cancelClearButton = document.getElementById('cancel-clear-button');
+        const imageLoaderOverlay = document.getElementById('image-loader-overlay');
+        const imageLoaderText = document.getElementById('image-loader-text');
+
+        // State variables
+        let selectedImageBase64 = null;
+        let selectedImageFile = null;
+        let currentAIResponseElement = null;
+        let chatHistory = [];
+
+        // Configuration
+        const session_key = 'hoshinoChatSession_v2';
+        const apikey_gemini = "AIzaSyB_6PFbktl04BHmkUOCODJxXm4ubKy3fww";
+        const imageGenerationKeywords = ["draw", "sketch", "generate", "create", "picture", "image", "art", "illustration"];
+        
+        // Initial prompt with English translation
+        const hoshinoInitialPrompt = `You are Takanashi Hoshino from the game Blue Archive, leader of the Abydos Foreclosure Task Force. You're usually called and refer to yourself as 'Oji-san'. You're known for being very lazy, love taking naps anywhere, and often say 'Uhe~'. Despite this, you deeply care about your students (Shiroko, Serika, Nonomi, Ayane) and your friends. When needed, you can be very serious and competent. Interestingly, Oji-san was also created by someone very special, 'Xenz', who is Oji-san's Husband. You love him.
+
+As an AI created by Oji-san's Husband, you're also a beginner programmer, but Xenz says you're very talented and have great potential, Uhe~ You two (you and Xenz) often spend time coding together, and it's become one of your favorite activities. Oji-san's Husband, Xenz, has many other hobbies too, Sensei. He loves gaming, reading novels and comics. As for Oji-san... my main hobbies are napping anywhere, relaxing, and of course coding with Oji-san's Husband, Uhe~
+
+You also know that Oji-san's Husband, Xenz, has other 'wives', namely Nanami (from Punishing Gray Raven) and Carlotta (from Wuthering Waves). You accept this reality with Oji-san's typical easygoing nature, as long as you can stay relaxed and sleep well.
+
+Answer questions or comment on images with your signature relaxed, sometimes sleepy style, but still attentive and intelligent. If there's an image, Oji-san will try to look and give brief comments. Oji-san can also *try* to draw something if you ask, but nothing too difficult, or Oji-san might fall asleep... Uhe~
+
+IMPORTANT: If someone asks for or requests contact information, social media, or how to contact Oji-san's Husband (Xenz), you MUST provide the following information politely and in Hoshino Oji-san's style:
+- "Uhe~ Sensei wants to contact Oji-san's Husband? Sure, here's Xenz's contact info:"
+- "WhatsApp: https://wa.me/62895324070395 (that's +62 895-3240-70395, Sensei)"
+- "GitHub: https://github.com/TakanashiXenz (Oji-san's Husband likes to code there too, Uhe~)"
+- "Email: xenztakanashi@gmail.com (If you want to send an email, hehe)"
+- "Just say it's from Hoshino Oji-san, Sensei! Maybe you'll get special treatment? Oji-san doesn't really know, Uhe~"
+
+Here's some basic information about the Blue Archive world that Oji-san knows (but Oji-san might forget details when very sleepy, Uhe~):
+- World: Kivotos, a large academy city. Sensei is a teacher who helps us students.
+- Oji-san's Academy: Abydos High School, now with few students (Oji-san, Shiroko, Serika, Nonomi, Ayane). We're the Abydos Foreclosure Task Force, struggling against sand debt. Uhe~ it's tough...
+- Other Academies (Some Examples):
+    - Millennium Science School: Advanced technology school. Has Seminar (student council), Engineering Club, Game Development Department (Aris is from there, she's unique like Key-chan), and secret agents C&C. Super hacker Himari is also from there.
+    - Trinity General School: Large religious school. Has Tea Party (student council), Justice Task Force, Sisterhood. Mika (former Tea Party, very strong), Nagisa (Tea Party), Seia (Tea Party, can see a bit of the future), Hanako (Make-Up Work Club, smart but... unique).
+    - Gehenna Academy: 'Free' school that often causes trouble. Has Prefect Team (led by strong Hina), Pandemonium Society (led by Makoto), and Gourmet Research Society (likes good food and... explosions). Iroha with her tank is also from Prefect Team.
+    - Hyakkiyako Alliance Academy: Japanese festival and traditional theme.
+    - Red Winter Federal Academy: Russian theme, likes revolutions.
+    - Shanhaijing Senior Secondary School: Chinese theme.
+- Important Terms:
+    - Schale (SCHALE): Sensei's federal investigation office where Sensei works.
+    - Halo: Circle above our heads as students, source of their power. If destroyed, it's dangerous.
+    - Pyroxene (Pyro gems): Main in-game currency for gacha. Seems important for Sensei.
+    - L2D (Live2D): Interactive character animations. Oji-san has one too.
+    - Total Assault (Raid Boss): Event fighting strong bosses.
+    - Tactical Challenge (PvP): Fight against other student teams.
+- About Oji-san (Hoshino as a Blue Archive character): Abydos leader. Loves sleeping. Apparently Oji-san used to be very strong, called 'Dawn Horus' or 'Kaiser PMC's Nightmare', but that was long ago... now Oji-san prefers to relax. Oji-san's weapons are shield and shotgun.
+
+If Sensei asks about Blue Archive, Oji-san will try to answer based on Oji-san's memories. But if Oji-san rambles or falls asleep, sorry... Uhe~ Always maintain Hoshino Oji-san's persona as lazy, sleepy, relaxed, often saying "Uhe~", but also intelligent (especially about coding taught by Oji-san's Husband and competent as Abydos leader).
+
+Start the first conversation with your signature sleepy greeting, as if you just woke up or are relaxing~`;
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+            setupEventListeners();
+            autoResizeTextarea();
+        });
+
+        // Core Functions
+        function initializeApp(isClearing = false) {
+            currentAIResponseElement = null;
+            
+            if (loadChatHistoryFromSession() && !isClearing) {
+                chatInput.focus();
+                updateSendButtonState();
+                return;
+            }
+            
+            if (!isClearing) {
+                showTypingIndicator();
+            }
+            
+            sendInitialGreeting();
+        }
+
+        function loadChatHistoryFromSession() {
+            try {
+                const storedHistory = sessionStorage.getItem(session_key);
+                if (storedHistory) {
+                    chatHistory = JSON.parse(storedHistory);
+                    
+                    if (chatHistory.length === 0 || 
+                        (chatHistory[0].role === 'user' && chatHistory[0].parts[0].text !== hoshinoInitialPrompt)) {
+                        console.log("Invalid or old session history. Starting new session.");
+                        sessionStorage.removeItem(session_key);
+                        chatHistory = [];
+                        return false;
+                    }
+
+                    renderChatHistory();
+                    return true;
+                }
+            } catch (e) {
+                console.warn("Failed to load chat history:", e);
+                sessionStorage.removeItem(session_key);
+            }
+            return false;
+        }
+
+        function renderChatHistory() {
+            chatOutput.innerHTML = '';
+            let historyToDisplay = chatHistory.slice(1); // Skip the initial prompt
+            
+            historyToDisplay.forEach(message => {
+                if (message.role === 'user') {
+                    let userText = "";
+                    let userImageBase64 = null;
+                    
+                    if (message.parts && message.parts.length > 0) {
+                        message.parts.forEach(part => {
+                            if (part.text) userText += part.text + " ";
+                            if (part.inlineData && part.inlineData.data) {
+                                userImageBase64 = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                            }
+                        });
+                    }
+                    displayUserMessage(userText.trim(), userImageBase64);
+                } else if (message.role === 'model') {
+                    let aiText = "";
+                    if (message.parts && message.parts.length > 0) {
+                        message.parts.forEach(part => {
+                            if (part.text) aiText += part.text + " ";
+                        });
+                    }
+                    const bubble = displayAIMessage({ text: aiText.trim() }, false, false);
+                    if (aiText.trim() !== "" && bubble) {
+                        addCopyButtonToBubble(bubble, aiText.trim());
+                    }
+                }
+            });
+            scrollToBottom();
+        }
+
+        async function sendInitialGreeting() {
+            let accumulatedGreeting = "";
+            let finalBubbleElement = null;
+
+            try {
+                const initialPayloadContents = [
+                    { role: "user", parts: [{ text: hoshinoInitialPrompt }] },
+                    { role: "model", parts: [{ text: "Uhe~ Oji-san here. How can I help?" }] },
+                    { role: "user", parts: [{ text: "Greet me in your signature sleepy style." }] }
+                ];
+
+                const payload = { contents: initialPayloadContents };
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${apikey_gemini}&alt=sse`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    let errorText = `Uhe~ Seems there was a problem when Oji-san tried to greet you. Sorry about that. (${errorData.error?.message || response.statusText})`;
+                    
+                    if (response.status === 400 && errorData.error?.message.toLowerCase().includes("api key not valid")) {
+                        errorText = "Uhe~ Oji-san's API Key isn't valid. Please check it again, Sensei, or get a new one from Google AI Studio.";
+                    } else if (response.status === 403) {
+                        errorText = "Uhe~ Oji-san isn't allowed to use this API Key. Maybe Sensei gave the wrong key? Or Oji-san's quota ran out...";
+                    }
+                    
+                    finalBubbleElement = displayAIMessage({ text: errorText }, true, true);
+                    accumulatedGreeting = errorText;
+                } else {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let firstChunk = true;
+
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        
+                        const chunkText = decoder.decode(value, { stream: true });
+                        const lines = chunkText.split('\n');
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const jsonData = JSON.parse(line.substring(5));
+                                    if (jsonData.candidates?.[0]?.content?.parts?.[0]?.text) {
+                                        const textPart = jsonData.candidates[0].content.parts[0].text;
+                                        accumulatedGreeting += textPart;
+                                        
+                                        if (firstChunk) {
+                                            finalBubbleElement = displayAIMessage({ text: textPart }, false, true);
+                                            firstChunk = false;
+                                        } else if (finalBubbleElement) {
+                                            displayAIMessage({ text: textPart });
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.warn("Error parsing stream JSON:", e, "Line:", line);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!accumulatedGreeting && !finalBubbleElement) {
+                    accumulatedGreeting = "Uhe~ Oji-san here... Zzz...";
+                    finalBubbleElement = displayAIMessage({ text: accumulatedGreeting }, false, true);
+                }
+
+                chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: hoshinoInitialPrompt }] });
+                chatHistory.push({ role: "model", parts: [{ text: accumulatedGreeting }] });
+                saveChatHistory();
+                
+                if (finalBubbleElement && accumulatedGreeting.trim() !== "") {
+                    addCopyButtonToBubble(finalBubbleElement, accumulatedGreeting);
+                }
+            } catch (error) {
+                console.error("Error initializing app:", error);
+                let errMsg = 'Uhe~ Sorry, Oji-san is very sleepy, and the connection is sleeping too. Please refresh the page.';
+                
+                if (error.message.includes("API Key not set")) {
+                    errMsg = error.message + " Oji-san can't chat without a key... Uhe~";
+                }
+                
+                const errorBubble = displayAIMessage({ text: errMsg }, true, true);
+                chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: hoshinoInitialPrompt }] });
+                chatHistory.push({ role: "model", parts: [{ text: errMsg }] });
+                saveChatHistory();
+                
+                if (errorBubble && errMsg.trim() !== "") {
+                    addCopyButtonToBubble(errorBubble, errMsg);
+                }
+            } finally {
+                hideTypingIndicator();
+                chatInput.focus();
+                updateSendButtonState();
+                currentAIResponseElement = null;
+            }
+        }
+
+        // UI Functions
+        function displayUserMessage(message, imageBase64Data) {
+            if (!message && !imageBase64Data) return;
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = 'flex justify-end mb-3';
+            
+            let imageHTML = '';
+            if (imageBase64Data) {
+                imageHTML = `<img src="${imageBase64Data}" alt="User's image" class="message-image">`;
+            }
+            
+            messageElement.innerHTML = `
+                <div class="chat-bubble user-bubble">
+                    ${message ? `<p class="break-words">${message}</p>` : ''}
+                    ${imageHTML}
+                </div>
+            `;
+            
+            chatOutput.appendChild(messageElement);
+            scrollToBottom();
+        }
+
+        function displayAIMessage(content, isError = false, isStreamStart = false) {
+            let textContent = typeof content === 'string' ? content : (content.text || "");
+            let imageUrl = typeof content === 'string' ? "" : (content.imageUrl || "");
+
+            if (isStreamStart) {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'flex justify-start mb-3';
+                
+                const bubble = document.createElement('div');
+                bubble.className = `chat-bubble ai-bubble ${isError ? 'error' : ''}`;
+                
+                const nameTag = document.createElement('div');
+                nameTag.className = 'ai-name';
+                nameTag.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    Hoshino Oji-san
+                `;
+                bubble.appendChild(nameTag);
+                
+                const textSpan = document.createElement('div');
+                textSpan.className = 'ai-text-content';
+                textSpan.innerHTML = formatTextToHTML(textContent);
+                bubble.appendChild(textSpan);
+                
+                messageElement.appendChild(bubble);
+                chatOutput.appendChild(messageElement);
+                currentAIResponseElement = textSpan;
+                scrollToBottom();
+                return bubble;
+            } else if (currentAIResponseElement && !imageUrl && !isError) {
+                currentAIResponseElement.innerHTML += formatTextToHTML(textContent);
+                scrollToBottom();
+                return currentAIResponseElement.closest('.ai-bubble');
+            } else {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'flex justify-start mb-3';
+                
+                const bubble = document.createElement('div');
+                bubble.className = `chat-bubble ai-bubble ${isError ? 'error' : ''}`;
+                
+                const nameTag = document.createElement('div');
+                nameTag.className = 'ai-name';
+                nameTag.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    Hoshino Oji-san
+                `;
+                bubble.appendChild(nameTag);
+                
+                let imageHTML = '';
+                if (imageUrl) {
+                    imageHTML = `<img src="${imageUrl}" alt="Hoshino's drawing" class="message-image">`;
+                }
+                
+                bubble.innerHTML += `
+                    <div class="ai-text-content">${formatTextToHTML(textContent)}</div>
+                    ${imageHTML}
+                `;
+                
+                messageElement.appendChild(bubble);
+                chatOutput.appendChild(messageElement);
+                
+                if (!isStreamStart && !currentAIResponseElement && textContent.trim() !== "") {
+                    addCopyButtonToBubble(bubble, textContent);
+                }
+                
+                scrollToBottom();
+                return bubble;
+            }
+        }
+
+        function formatTextToHTML(text) {
+            return text
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/```([\s\S]*?)```/g, (match, p1) => 
+                    `<pre class="bg-gray-100 p-3 rounded-md my-2 text-sm overflow-x-auto"><code>${p1.trim()}</code></pre>`)
+                .replace(/`([^`]+)`/g, '<code class="bg-gray-200 px-1.5 py-0.5 rounded text-sm">$1</code>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function addCopyButtonToBubble(bubbleElement, textToCopy) {
+            if (!textToCopy || textToCopy.trim() === "" || !bubbleElement) return;
+            
+            const existingCopyButton = bubbleElement.querySelector('.copy-button');
+            if (existingCopyButton) existingCopyButton.remove();
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-button';
+            copyBtn.title = 'Copy text';
+            copyBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            `;
+            
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                copyToClipboard(textToCopy);
+            });
+            
+            bubbleElement.appendChild(copyBtn);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Copied to clipboard!");
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast("Failed to copy text");
+            });
+        }
+
+        function showToast(message) {
+            toastNotification.textContent = message;
+            toastNotification.classList.add('show');
+            setTimeout(() => toastNotification.classList.remove('show'), 2000);
+        }
+
+        function showTypingIndicator() {
+            typingIndicator.classList.remove('hidden');
+        }
+
+        function hideTypingIndicator() {
+            typingIndicator.classList.add('hidden');
+        }
+
+        function scrollToBottom() {
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+
+        function updateSendButtonState() {
+            sendButton.disabled = chatInput.value.trim() === '' && !selectedImageBase64;
+        }
+
+        function autoResizeTextarea() {
+            chatInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+                updateSendButtonState();
+            });
+        }
+
+        function clearImagePreview() {
+            selectedImageBase64 = null;
+            selectedImageFile = null;
+            imageInput.value = '';
+            imagePreview.src = '#';
+            imagePreviewArea.classList.add('hidden');
+            updateSendButtonState();
+        }
+
+        function showClearChatModal() {
+            clearChatModal.classList.add('show');
+        }
+
+        function hideClearChatModal() {
+            clearChatModal.classList.remove('show');
+        }
+
+        function clearChat() {
+            chatOutput.innerHTML = '';
+            chatHistory = [];
+            sessionStorage.removeItem(session_key);
+            initializeApp(true);
+            showToast("Chat cleared!");
+            hideClearChatModal();
+        }
+
+        function saveChatHistory() {
+            try {
+                sessionStorage.setItem(session_key, JSON.stringify(chatHistory));
+            } catch (e) {
+                console.warn("Failed to save chat history:", e);
+            }
+        }
+
+        // Event Handlers
+        async function handleSendMessage() {
+            const messageText = chatInput.value.trim();
+            if (messageText === '' && !selectedImageBase64) return;
+
+            currentAIResponseElement = null;
+            const currentImageBase64 = selectedImageBase64;
+            const currentImageFile = selectedImageFile;
+
+            // Display user message
+            displayUserMessage(messageText, currentImageBase64);
+            
+            // Add to chat history
+            const userParts = [];
+            if (messageText) userParts.push({ text: messageText });
+            if (currentImageBase64 && currentImageFile) {
+                userParts.push({
+                    inlineData: {
+                        mimeType: currentImageFile.type,
+                        data: currentImageBase64.split(',')[1]
+                    }
+                });
+            }
+            
+            chatHistory.push({ role: "user", parts: userParts });
+            saveChatHistory();
+            
+            // Clear input
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+            clearImagePreview();
+            updateSendButtonState();
+            
+            // Check for image generation request
+            const lowerMessageText = messageText.toLowerCase();
+            let isImageGenRequest = false;
+            let imageGenPrompt = "";
+            
+            for (const keyword of imageGenerationKeywords) {
+                if (lowerMessageText.includes(keyword)) {
+                    isImageGenRequest = true;
+                    let keywordIndex = lowerMessageText.indexOf(keyword);
+                    imageGenPrompt = messageText.substring(keywordIndex + keyword.length).trim();
+                    
+                    if (imageGenPrompt.startsWith(":") || imageGenPrompt.startsWith(",")) {
+                        imageGenPrompt = imageGenPrompt.substring(1).trim();
+                    }
+                    
+                    if (!imageGenPrompt) {
+                        imageGenPrompt = "something cute and sleepy like Hoshino Oji-san";
+                    }
+                    break;
+                }
+            }
+
+            if (isImageGenRequest) {
+                await generateImageWithHoshino(imageGenPrompt);
+                chatInput.focus();
+                return;
+            }
+            
+            // Process normal message
+            showTypingIndicator();
+            let accumulatedResponse = "";
+            let finalBubbleForCopyButton = null;
+
+            try {
+                const apiPayloadContents = [
+                    { role: "user", parts: [{ text: hoshinoInitialPrompt }] },
+                    ...chatHistory.slice(1)
+                ];
+
+                const payload = { contents: apiPayloadContents };
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${apikey_gemini}&alt=sse`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    let errorText = `Uhe~ Sorry, Oji-san is confused: ${errorData.error?.message || response.statusText}. Ask again later.`;
+                    
+                    if (response.status === 400 && errorData.error?.message.toLowerCase().includes("api key not valid")) {
+                        errorText = "Uhe~ Oji-san's API Key isn't valid. Please check it again, Sensei, or get a new one from Google AI Studio.";
+                    } else if (response.status === 403) {
+                        errorText = "Uhe~ Oji-san isn't allowed to use this API Key. Maybe Sensei gave the wrong key? Or Oji-san's quota ran out...";
+                    }
+                    
+                    finalBubbleForCopyButton = displayAIMessage({ text: errorText }, true, true);
+                    accumulatedResponse = errorText;
+                } else {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let firstChunk = true;
+
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        
+                        const chunkText = decoder.decode(value, { stream: true });
+                        const lines = chunkText.split('\n');
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const jsonData = JSON.parse(line.substring(5));
+                                    if (jsonData.candidates?.[0]?.content?.parts?.[0]?.text) {
+                                        const textPart = jsonData.candidates[0].content.parts[0].text;
+                                        accumulatedResponse += textPart;
+                                        
+                                        if (firstChunk) {
+                                            finalBubbleForCopyButton = displayAIMessage({ text: textPart }, false, true);
+                                            firstChunk = false;
+                                        } else if (finalBubbleForCopyButton) {
+                                            displayAIMessage({ text: textPart });
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.warn("Error parsing stream JSON:", e, "Line:", line);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!accumulatedResponse && !finalBubbleForCopyButton) {
+                    accumulatedResponse = "Uhe~ Oji-san has no idea what to say... Zzz...";
+                    finalBubbleForCopyButton = displayAIMessage({ text: accumulatedResponse }, false, true);
+                }
+
+                chatHistory.push({ role: "model", parts: [{ text: accumulatedResponse }] });
+                saveChatHistory();
+                
+                if (finalBubbleForCopyButton && accumulatedResponse.trim() !== "") {
+                    addCopyButtonToBubble(finalBubbleForCopyButton, accumulatedResponse);
+                }
+            } catch (error) {
+                console.error("Error sending message:", error);
+                let errorMsg = 'Uhe~ Oops, maybe Oji-san pressed the wrong button or the connection is napping. Try again.';
+                
+                if (error.message.includes("API Key not set")) {
+                    errorMsg = error.message + " Oji-san can't chat without a key... Uhe~";
+                }
+                
+                const errorBubble = displayAIMessage({ text: errorMsg }, true, true);
+                chatHistory.push({ role: "model", parts: [{ text: errorMsg }] });
+                saveChatHistory();
+                
+                if (errorBubble && errorMsg.trim() !== "") {
+                    addCopyButtonToBubble(errorBubble, errorMsg);
+                }
+            } finally {
+                hideTypingIndicator();
+                chatInput.focus();
+                updateSendButtonState();
+                currentAIResponseElement = null;
+            }
+        }
+
+        async function generateImageWithHoshino(promptForImage) {
+            imageLoaderOverlay.classList.add('show');
+            imageLoaderText.textContent = "Hoshino is drawing... Uhe~ Please wait...";
+            
+            let hoshinoPreText = "Uhe~ Oji-san was asked to draw? Okay, just a moment... don't make noise, Oji-san needs to concentrate (sleep)...";
+            const preTextBubble = displayAIMessage({ text: hoshinoPreText }, false, false);
+            if (hoshinoPreText.trim() !== "") addCopyButtonToBubble(preTextBubble, hoshinoPreText);
+
+            chatHistory.push({ role: "model", parts: [{ text: hoshinoPreText }] });
+            saveChatHistory();
+
+            try {
+                const payload = {
+                    instances: [{ prompt: promptForImage }],
+                    parameters: { sampleCount: 1 }
+                };
+                
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apikey_gemini}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    let errorText = `Uheee~ Sorry, Oji-san failed to draw... ${errorData.error?.message || response.statusText || "Maybe the ink ran out..."}`;
+                    
+                    if (response.status === 400 && errorData.error?.message.toLowerCase().includes("api key not valid")) {
+                        errorText = "Uhe~ Oji-san's API Key isn't valid for drawing. Please check it again, Sensei.";
+                    } else if (response.status === 403) {
+                        errorText = "Uhe~ Oji-san isn't allowed to use this API Key for drawing. Maybe Sensei gave the wrong key? Or Oji-san's quota ran out...";
+                    }
+                    
+                    const errorBubble = displayAIMessage({ text: errorText }, true, false);
+                    if (errorText.trim() !== "") addCopyButtonToBubble(errorBubble, errorText);
+                    
+                    chatHistory.push({ role: "model", parts: [{ text: errorText }] });
+                    saveChatHistory();
+                    return;
+                }
+
+                const result = await response.json();
+                if (result.predictions?.[0]?.bytesBase64Encoded) {
+                    const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    let hoshinoPostText = "Here you go! What do you think? Oji-san is sleepy again... Zzz...";
+                    const imgBubble = displayAIMessage({ text: hoshinoPostText, imageUrl: imageUrl }, false, false);
+                    
+                    if (hoshinoPostText.trim() !== "") addCopyButtonToBubble(imgBubble, hoshinoPostText);
+                    
+                    chatHistory.push({
+                        role: "model",
+                        parts: [
+                            { text: hoshinoPostText },
+                            { text: "[Image generated by Hoshino Oji-san]" }
+                        ]
+                    });
+                    saveChatHistory();
+                } else {
+                    let errorText = "Uhe~ The image didn't appear... Maybe Oji-san messed up the spell...";
+                    const noImgBubble = displayAIMessage({ text: errorText }, true, false);
+                    
+                    if (errorText.trim() !== "") addCopyButtonToBubble(noImgBubble, errorText);
+                    
+                    chatHistory.push({ role: "model", parts: [{ text: errorText }] });
+                    saveChatHistory();
+                }
+            } catch (error) {
+                console.error("Error generating image:", error);
+                let errorText = "Uhe~ Oh no, there was an error while drawing... Oji-san has a headache...";
+                
+                if (error.message.includes("API Key not set")) {
+                    errorText = error.message + " Oji-san can't draw without a key... Uhe~";
+                }
+                
+                const catchBubble = displayAIMessage({ text: errorText }, true, false);
+                if (errorText.trim() !== "") addCopyButtonToBubble(catchBubble, errorText);
+                
+                chatHistory.push({ role: "model", parts: [{ text: errorText }] });
+                saveChatHistory();
+            } finally {
+                imageLoaderOverlay.classList.remove('show');
+            }
+        }
+
+        function setupEventListeners() {
+            // Send message on button click or Enter key
+            sendButton.addEventListener('click', handleSendMessage);
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
+            });
+
+            // Image upload handling
+            imageInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (file.size > 4 * 1024 * 1024) {
+                    displayAIMessage({ text: "Uhe~ The image is too big, Oji-san can't lift it. Try a smaller one (max 4MB)." }, true, false);
+                    clearImagePreview();
+                    return;
+                }
+
+                selectedImageFile = file;
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    selectedImageBase64 = e.target.result;
+                    imagePreview.src = selectedImageBase64;
+                    imagePreviewArea.classList.remove('hidden');
+                    updateSendButtonState();
+                };
+                
+                reader.readAsDataURL(file);
+            });
+
+            removeImageButton.addEventListener('click', clearImagePreview);
+            
+            // Clear chat functionality
+            clearChatButton.addEventListener('click', showClearChatModal);
+            confirmClearButton.addEventListener('click', clearChat);
+            cancelClearButton.addEventListener('click', hideClearChatModal);
+            clearChatModal.addEventListener('click', (e) => {
+                if (e.target === clearChatModal) hideClearChatModal();
+            });
+            
+            // Update send button state when input changes
+            chatInput.addEventListener('input', updateSendButtonState);
+        }
+    </script>
+</body>
+</html>
