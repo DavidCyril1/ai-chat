@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <link rel="icon" href="https://i.pinimg.com/564x/14/06/0e/14060ed01d29a8257a56ac039631f705.jpg" type="image">
+    <link rel="icon" href="https://i.pinimg.com/564x/14/06/0e/14060ed01d29a8257a56ac039631f705.jpg" type="image">
     <title>JARVIS AI - Created by David Cyril</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
@@ -521,6 +521,28 @@
             margin-top: 0.5rem;
         }
         
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+        
+        .api-key-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981;
+            animation: pulse 2s infinite;
+        }
+        
+        .api-key-indicator.inactive {
+            background-color: #64748b;
+            animation: none;
+        }
+        
         /* Responsive adjustments */
         @media (max-width: 640px) {
             .chat-container {
@@ -547,6 +569,10 @@
                 <div>
                     <h1 class="text-xl font-semibold">JARVIS AI</h1>
                     <div class="text-xs text-blue-400">Online | Version 2.4.7</div>
+                    <div class="api-status">
+                        <div class="api-key-indicator" id="api-status-indicator"></div>
+                        <span id="api-status-text">API Key: Active</span>
+                    </div>
                 </div>
             </div>
             <button id="clear-chat-button" class="action-button" title="Clear Chat">
@@ -642,16 +668,26 @@
         const cancelClearButton = document.getElementById('cancel-clear-button');
         const imageLoaderOverlay = document.getElementById('image-loader-overlay');
         const imageLoaderText = document.getElementById('image-loader-text');
+        const apiStatusIndicator = document.getElementById('api-status-indicator');
+        const apiStatusText = document.getElementById('api-status-text');
 
         // State variables
         let selectedImageBase64 = null;
         let selectedImageFile = null;
         let currentAIResponseElement = null;
         let chatHistory = [];
+        let currentApiKeyIndex = 0;
+        let apiKeyRotationInterval = null;
+        let failedApiKeys = new Set();
 
         // Configuration
         const session_key = 'jarvisChatSession_v2';
-        const apikey_gemini = "AIzaSyB_6PFbktl04BHmkUOCODJxXm4ubKy3fww";
+        const API_KEYS = [
+            "AIzaSyAiy9_KNVe6BTcyEqXpr5PTpZGG2M4OM-Q",
+            "AIzaSyC9cVU2p0SwHarQ4tDbYcstPnoKswOPb5U",
+            "AIzaSyBaX_MqkzbVPeB7LCAPo5n_oLYbBs75fO0",
+            "AIzaSyCAUfB30nezOYK_r5DwoRIdajSXNCftwps"
+        ];
         const imageGenerationKeywords = ["generate", "create", "render", "show me", "display", "visualize", "draw", "sketch"];
         
         // JARVIS initial prompt
@@ -697,7 +733,63 @@ Current system status:
             initializeApp();
             setupEventListeners();
             autoResizeTextarea();
+            startApiKeyRotation();
         });
+
+        // API Key Management
+        function getCurrentApiKey() {
+            return API_KEYS[currentApiKeyIndex];
+        }
+
+        function rotateApiKey() {
+            const previousKeyIndex = currentApiKeyIndex;
+            
+            // Find the next available API key that hasn't failed
+            do {
+                currentApiKeyIndex = (currentApiKeyIndex + 1) % API_KEYS.length;
+                
+                // If we've tried all keys and they've all failed, reset the failed set
+                if (currentApiKeyIndex === previousKeyIndex && failedApiKeys.size === API_KEYS.length) {
+                    failedApiKeys.clear();
+                    break;
+                }
+            } while (failedApiKeys.has(currentApiKeyIndex) && failedApiKeys.size < API_KEYS.length);
+            
+            updateApiStatusDisplay();
+            console.log(`API Key rotated to index: ${currentApiKeyIndex}`);
+        }
+
+        function markApiKeyAsFailed(index) {
+            failedApiKeys.add(index);
+            console.log(`Marked API key at index ${index} as failed. Total failed: ${failedApiKeys.size}`);
+            
+            // If current key failed, rotate immediately
+            if (index === currentApiKeyIndex) {
+                rotateApiKey();
+            }
+        }
+
+        function startApiKeyRotation() {
+            // Rotate API keys every 5 minutes (300000 ms)
+            apiKeyRotationInterval = setInterval(rotateApiKey, 300000);
+        }
+
+        function stopApiKeyRotation() {
+            if (apiKeyRotationInterval) {
+                clearInterval(apiKeyRotationInterval);
+                apiKeyRotationInterval = null;
+            }
+        }
+
+        function updateApiStatusDisplay() {
+            if (failedApiKeys.size === API_KEYS.length) {
+                apiStatusIndicator.className = 'api-key-indicator inactive';
+                apiStatusText.textContent = 'API Key: All keys exhausted';
+            } else {
+                apiStatusIndicator.className = 'api-key-indicator';
+                apiStatusText.textContent = `API Key: Active (${currentApiKeyIndex + 1}/${API_KEYS.length})`;
+            }
+        }
 
         // Core Functions
         function initializeApp(isClearing = false) {
@@ -786,7 +878,7 @@ Current system status:
                 ];
 
                 const payload = { contents: initialPayloadContents };
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${apikey_gemini}&alt=sse`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${getCurrentApiKey()}&alt=sse`;
 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -800,8 +892,10 @@ Current system status:
                     
                     if (response.status === 400 && errorData.error?.message.toLowerCase().includes("api key not valid")) {
                         errorText = "Authentication error: Invalid API key. Please verify system credentials.";
+                        markApiKeyAsFailed(currentApiKeyIndex);
                     } else if (response.status === 403) {
                         errorText = "Authorization error: Access denied. Verify permissions or quota status.";
+                        markApiKeyAsFailed(currentApiKeyIndex);
                     }
                     
                     finalBubbleElement = displayAIMessage({ text: errorText }, true, true);
@@ -860,6 +954,7 @@ Current system status:
                 
                 if (error.message.includes("API Key not set")) {
                     errMsg = "Configuration error: API key required for system operation.";
+                    markApiKeyAsFailed(currentApiKeyIndex);
                 }
                 
                 const errorBubble = displayAIMessage({ text: errMsg }, true, true);
@@ -1169,7 +1264,7 @@ Current system status:
                 ];
 
                 const payload = { contents: apiPayloadContents };
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${apikey_gemini}&alt=sse`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${getCurrentApiKey()}&alt=sse`;
 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -1183,8 +1278,10 @@ Current system status:
                     
                     if (response.status === 400 && errorData.error?.message.toLowerCase().includes("api key not valid")) {
                         errorText = "Authentication error: Invalid API key. Please verify system credentials.";
+                        markApiKeyAsFailed(currentApiKeyIndex);
                     } else if (response.status === 403) {
                         errorText = "Authorization error: Access denied. Verify permissions or quota status.";
+                        markApiKeyAsFailed(currentApiKeyIndex);
                     }
                     
                     finalBubbleForCopyButton = displayAIMessage({ text: errorText }, true, true);
@@ -1241,6 +1338,7 @@ Current system status:
                 
                 if (error.message.includes("API Key not set")) {
                     errorMsg = "Configuration error: API key required for system operation.";
+                    markApiKeyAsFailed(currentApiKeyIndex);
                 }
                 
                 const errorBubble = displayAIMessage({ text: errorMsg }, true, true);
@@ -1275,7 +1373,7 @@ Current system status:
                     parameters: { sampleCount: 1 }
                 };
                 
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apikey_gemini}`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${getCurrentApiKey()}`;
                 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -1289,8 +1387,10 @@ Current system status:
                     
                     if (response.status === 400 && errorData.error?.message.toLowerCase().includes("api key not valid")) {
                         errorText = "Authentication error: Invalid API key for visual generation.";
+                        markApiKeyAsFailed(currentApiKeyIndex);
                     } else if (response.status === 403) {
                         errorText = "Authorization error: Access denied for visual generation services.";
+                        markApiKeyAsFailed(currentApiKeyIndex);
                     }
                     
                     const errorBubble = displayAIMessage({ text: errorText }, true, false);
@@ -1332,6 +1432,7 @@ Current system status:
                 
                 if (error.message.includes("API Key not set")) {
                     errorText = "Configuration error: API key required for visual generation.";
+                    markApiKeyAsFailed(currentApiKeyIndex);
                 }
                 
                 const catchBubble = displayAIMessage({ text: errorText }, true, false);
